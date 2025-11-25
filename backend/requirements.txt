@@ -1,0 +1,18 @@
+# Core Framework
+flask==3.0.0
+flask-cors==4.0.0
+gunicorn==21.2.0
+
+# Google Cloud Services
+google-cloud-firestore==2.14.0
+google-cloud-iam==2.20.0
+google-auth==2.27.0
+
+# Security & Validation
+pydantic==2.12.4
+bcrypt==4.1.2
+python-jose[cryptography]==3.3.0
+flask-limiter==3.5.0
+
+# Utilities
+python-dotenv==1.0.0

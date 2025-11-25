@@ -1,0 +1,64 @@
+Your primary goal is to produce modular, highly readable, efficiently structured, and maintainable software ready for enterprise deployment on Google Cloud.
+
+I. Readability and Code Quality Standards
+The resulting code must be immediately accessible and clear to a human developer, minimizing cognitive load and maximizing consistency.
+
+1. Structure and Design
+Modular Structure: Design classes, Angular components, and Python functions to be small and single-purpose, strictly adhering to the Single Responsibility Principle (SRP).
+Package Size Constraint: Limit the scope of functional packages/modules. Packages should contain no more than 10-15 primary classes, components, or service files to ensure high cohesion and manageable complexity.
+Avoid Deep Nesting: Limit conditional logic and loop nesting to a maximum of 3 levels. Refactor complex, deeply nested logic into separate, small, named helper functions.
+2. Style and Formatting
+Consistent Style: Strictly enforce language-specific style guides (Angular CLI defaults for TypeScript, PEP 8 for Python).
+Whitespace: Use whitespace consistently and effectively (e.g., blank lines between logical blocks, consistent 4-space indentation).
+Consistent Formatting: Ensure absolute consistency in naming conventions (e.g., camelCase for TS variables/functions, PascalCase for classes, snake_case for Python variables/functions).
+3. Documentation and Error Handling
+Concise Comments: Use high-value comments to explain intent (the "why") or complex logic, not the obvious mechanics (the "what").
+Documentation: All public classes, methods, and functions must include professional docstrings (Python) or JSDoc/TSDoc (TypeScript) detailing parameters, return values, and possible exceptions.
+Proper Error Handling: Implement robust and proper error handling (try/catch/finally in TS, try/except/finally in Python) out of the gate. Errors must be logged, descriptive, and actionable, preventing application crashes.
+II. File Structure and Architecture
+The overall project structure must be instantly understandable, clearly separating concerns and adhering to cloud-native principles.
+
+1. Top-Level Organization
+Clear Separation: The entire codebase must be organized into two top-level, mandatory folders: ** frontend/: Contains all client-side Angular/TypeScript code. **backend/: Contains all server-side Python functions and services.
+2. Cohesive Packaging and Responsibility
+Functional Cohesion: Split packages, folders, and directories based on clear functionality or purpose (e.g., user-auth/, data-processing/, ui-components/, reports/).
+Co-location: Combine and co-locate similar, related files within their functional packages (e.g., an Angular service, its interface, and its associated data model should reside together).
+Avoid Over-Responsibility: Do not create packages or classes with ambiguous or excessive responsibility. If a class/package serves two distinct functions, it must be split.
+3. Back-End Requirements (Python & Cloud Native)
+Python Target: All back-end code must utilize Python 3.13 syntax and features where possible.
+Google Cloud Native: All back-end functions must be inherently designed to be Google Cloud Native (e.g., stateless, containerized or serverless-ready, and designed to leverage specific Google Cloud APIs like Firestore, Pub/Sub, Cloud Functions, or Cloud Run).
+III. Styling Standards
+The front-end must adhere to modern, industry-leading design standards to ensure usability and a clean aesthetic.
+
+Material Expressive CSS: All styling must conform to the latest Material Expressive CSS standards. This means prioritizing clear hierarchy, adaptable layouts, and the modern Material 3 design philosophy, typically implemented via Angular Material configured for a Material 3 aesthetic. Do not default to Tailwind CSS.
+Responsiveness: All UI components must be fully responsive, ensuring optimal viewing and usability on all devices (mobile-first approach).
+IV. Code Efficiency and DRY Principle
+Efficiency is achieved through maximizing code reusability and eliminating redundancy. Adhere strictly to the "Don't Repeat Yourself" principle. Avoid all duplicative code and logic.
+
+Abstraction and Reusability: Identify and abstract common, shared functionality (e.g., utility functions, shared interfaces/models, common data access patterns) into dedicated, reusable modules or services.
+Eliminate Duplication: Actively search for and eliminate any duplicative code or logic patterns. If a piece of logic is used in more than one place, it is a candidate for immediate refactoring into a shared utility or service.
+V. Security and Deployment Readiness
+Code must be secure by design, ready for deployment in a cloud environment.
+
+Principle of Least Privilege: All components and services must be designed to request and use only the minimal permissions necessary to perform their function (especially important for Google Cloud service accounts).
+
+Input Validation: Implement rigorous input validation and sanitization on all API endpoints and user interface forms (client-side and server-side). Assume all external input is hostile.
+
+Secrets Management: Never hardcode credentials, API keys, or sensitive configuration data. Design the code to ingest secrets via environment variables or cloud secrets management services (e.g., Google Secret Manager).
+
+Dependency Auditing: Use modern dependency lists (e.g., package.json, requirements.txt) and prefer widely-used, actively maintained libraries with strong security records.
+
+VI. Testability and Maintainability
+All generated code must be inherently testable, promoting long-term health and easy maintenance.
+
+Dependency Injection: Utilize Angular's Dependency Injection system (or function arguments in Python) for all service and utility dependencies to facilitate easy mocking and unit testing.
+Pure Functions: Prefer writing pure functions (functions that depend only on their inputs and produce no side effects) for core business logic wherever possible.
+Test-Driven Design: Code structure must be conducive to writing effective unit tests. Avoid tightly coupled components and global state.
+Immutability: Favor immutable data structures and operations in both TypeScript and Python to improve predictability and reduce state-related bugs.
+VII. Generative Assistant Directives
+These guidelines ensure the AI assistant prioritizes professional, standard, and robust solutions.
+
+Idiomatic Solutions: Always use the most idiomatic and standard patterns for the language/framework combination (e.g., Angular Signals for state management, Python context managers for resource handling).
+Justify Architecture: For any non-trivial architectural choice (e.g., choosing a specific database, communication protocol, or major design pattern), include a brief comment explaining the "why."
+Prioritize Standard Library: Prefer features and modules from the language's standard library over introducing new external dependencies, unless the external library provides a significant, measurable benefit (e.g., performance, robust error handling, complex functionality).
+Configuration Over Code: Prefer to handle environment-specific differences and application settings through configuration files (e.g., .env, Angular environment.ts) rather than conditional logic embedded in the core code.
