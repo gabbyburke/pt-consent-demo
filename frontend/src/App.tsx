@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Grid, Container } from '@mui/material';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppHeader } from './components/layout/AppHeader';
 import { PageContainer } from './components/layout/PageContainer';
 import { LoginForm } from './components/auth/LoginForm';
 import { KBAVerification } from './components/auth/KBAVerification';
 import { ConsentDashboard } from './components/consent/ConsentDashboard';
+import { DemoControlPanel } from './components/demo/DemoControlPanel';
+import { ActivityTimeline } from './components/demo/ActivityTimeline';
 
 /**
  * Main application content component.
@@ -16,6 +18,7 @@ function AppContent(): React.ReactElement {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [success, setSuccess] = useState('');
+  const [selectedTestPerson, setSelectedTestPerson] = useState<any>(null);
 
   /**
    * Handles user login.
@@ -95,6 +98,16 @@ function AppContent(): React.ReactElement {
     setInfo('');
   };
 
+  /**
+   * Handles selection of a test person from Demo Control Panel.
+   */
+  const handleSelectTestPerson = (person: any): void => {
+    setSelectedTestPerson(person);
+    setInfo(`Selected test user: ${person.first_name} ${person.last_name}. Use their credentials below.`);
+    setError('');
+    setSuccess('');
+  };
+
   return (
     <Box sx={{ 
       minHeight: '100vh', 
@@ -109,32 +122,49 @@ function AppContent(): React.ReactElement {
         onLogout={handleLogout}
       />
 
-      <PageContainer
-        error={error}
-        info={info}
-        success={success}
-      >
-        {!user && (
-          <LoginForm
-            onLogin={handleLogin}
-            onBypass={handleBypass}
-          />
-        )}
+      <Container maxWidth={false} sx={{ flex: 1, py: 3 }}>
+        {/* Demo Control Panel - Always visible at top */}
+        <DemoControlPanel onSelectPerson={handleSelectTestPerson} />
 
-        {user && !kbaVerified && (
-          <KBAVerification
-            onVerified={handleKBAVerified}
-            onError={handleKBAError}
-          />
-        )}
+        {/* Split-screen layout: Main content + Activity Timeline */}
+        <Grid container spacing={2} sx={{ mt: 0 }}>
+          {/* Main Content Area */}
+          <Grid size={{ xs: 12, lg: 8 }}>
+            <PageContainer
+              error={error}
+              info={info}
+              success={success}
+            >
+              {!user && (
+                <LoginForm
+                  onLogin={handleLogin}
+                  onBypass={handleBypass}
+                />
+              )}
 
-        {user && kbaVerified && (
-          <ConsentDashboard
-            onError={handleConsentError}
-            onSuccess={handleConsentSuccess}
-          />
-        )}
-      </PageContainer>
+              {user && !kbaVerified && (
+                <KBAVerification
+                  onVerified={handleKBAVerified}
+                  onError={handleKBAError}
+                  selectedTestPerson={selectedTestPerson}
+                />
+              )}
+
+              {user && kbaVerified && (
+                <ConsentDashboard
+                  onError={handleConsentError}
+                  onSuccess={handleConsentSuccess}
+                />
+              )}
+            </PageContainer>
+          </Grid>
+
+          {/* Activity Timeline Sidebar */}
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <ActivityTimeline />
+          </Grid>
+        </Grid>
+      </Container>
     </Box>
   );
 }

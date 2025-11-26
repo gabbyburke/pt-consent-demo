@@ -37,8 +37,17 @@ export interface KBAVerificationResponse {
   verified: boolean;
   
   /** Status message */
-  status: string;
-  
-  /** Optional error or info message */
   message?: string;
+  
+  /** Person data if verification succeeded */
+  person?: {
+    medicaid_id: string;
+    first_name: string;
+    last_name: string;
+    email?: string;
+    phone?: string;
+  };
+  
+  /** Remaining attempts if verification failed */
+  attempts_remaining?: number;
 }

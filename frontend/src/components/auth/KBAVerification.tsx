@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, TextField, Button, Box } from '@mui/material';
 import { kbaService } from '../../services/kba.service';
 import type { KBAData } from '../../models/User';
+import { useApiActivityLogger } from '../../hooks/useApiActivityLogger';
 
 /**
  * Props for KBAVerification component.
@@ -15,6 +16,9 @@ interface KBAVerificationProps {
   
   /** Whether verification is in progress */
   isLoading?: boolean;
+  
+  /** Selected test person from Demo Control Panel */
+  selectedTestPerson?: any;
 }
 
 /**
@@ -27,13 +31,25 @@ interface KBAVerificationProps {
 export function KBAVerification({ 
   onVerified, 
   onError, 
-  isLoading = false 
+  isLoading = false,
+  selectedTestPerson
 }: KBAVerificationProps): React.ReactElement {
   const [ssnLast4, setSsnLast4] = useState('');
   const [dob, setDob] = useState('');
   const [ssnError, setSsnError] = useState('');
   const [dobError, setDobError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { logKBARequest, logKBASuccess, logKBAFailure, logAuthToken, logAuthSuccess } = useApiActivityLogger();
+
+  // Auto-fill form when test person is selected
+  useEffect(() => {
+    if (selectedTestPerson) {
+      setSsnLast4(selectedTestPerson.ssn_last_4 || '');
+      setDob(selectedTestPerson.date_of_birth || '');
+      setSsnError('');
+      setDobError('');
+    }
+  }, [selectedTestPerson]);
 
   /**
    * Validates SSN last 4 input.
@@ -93,14 +109,29 @@ export function KBAVerification({
         dob,
       };
       
+      // Log KBA request
+      logKBARequest(selectedTestPerson?.medicaid_id || 'unknown', ['SSN', 'DOB']);
+      
       const response = await kbaService.verifyIdentity(kbaData);
       
-      if (response.verified) {
+      if (response.verified && response.person) {
+        // Log successful verification
+        logKBASuccess(response.person, 2, 2);
+        
+        // Simulate GCIP token generation
+        logAuthToken(response.person.medicaid_id);
+        
+        // Log authentication success
+        logAuthSuccess(response.person);
+        
         onVerified();
       } else {
+        // Log failed verification
+        logKBAFailure(response.message || 'Verification failed', response.attempts_remaining);
         onError(response.message || 'Identity verification failed. Please check your information.');
       }
     } catch (error) {
+      logKBAFailure('Verification error occurred');
       onError('Verification failed. Please try again.');
     } finally {
       setIsSubmitting(false);
