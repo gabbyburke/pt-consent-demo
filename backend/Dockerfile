@@ -37,10 +37,6 @@ ENV PATH=/root/.local/bin:$PATH
 # Set Python to run in unbuffered mode (better for logging)
 ENV PYTHONUNBUFFERED=1
 
-# Create non-root user for security
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
-
 # Expose port (Cloud Run will set PORT env var)
 EXPOSE 8080
 
