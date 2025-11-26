@@ -20,27 +20,35 @@ class ConsentService:
     
     def get_user_consents_with_providers(self, user_id: str) -> List[Dict[str, Any]]:
         """
-        Gets all consents for a user with provider details.
+        Gets all providers with their consent status for a user.
+        Returns ALL providers from Firestore.
+        
+        IMPORTANT: Colorado is an OPT-OUT state, so consent defaults to TRUE.
+        Users must explicitly revoke consent to opt out.
         
         Args:
             user_id: User ID
             
         Returns:
-            List of consent records with provider info
+            List of all providers with their consent status (defaults to True for opt-out)
         """
-        consents = firestore_db.get_user_consents(user_id)
-        providers = {p['id']: p for p in firestore_db.list_providers()}
+        # Get all providers from Firestore
+        all_providers = firestore_db.list_providers()
         
+        # Get user's existing consent records
+        user_consents = firestore_db.get_user_consents(user_id)
+        consent_map = {c['provider_id']: c['consented'] for c in user_consents}
+        
+        # Build result with all providers
+        # Default to True (opted-in) since Colorado is opt-out
         result = []
-        for consent in consents:
-            provider = providers.get(consent['provider_id'])
-            if provider:
-                result.append({
-                    'id': consent['provider_id'],
-                    'name': provider['name'],
-                    'address': provider.get('address'),
-                    'consented': consent['consented']
-                })
+        for provider in all_providers:
+            result.append({
+                'id': provider['id'],
+                'name': provider['name'],
+                'address': provider.get('address'),
+                'consented': consent_map.get(provider['id'], True)  # Default TRUE for opt-out state
+            })
         
         return result
     

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, TextField, Button, Box } from '@mui/material';
 import { kbaService } from '../../services/kba.service';
+import { apiClient } from '../../services/api.client';
 import type { KBAData } from '../../models/User';
 import { useApiActivityLogger } from '../../hooks/useApiActivityLogger';
 
@@ -98,6 +99,11 @@ export function KBAVerification({
       const response = await kbaService.verifyIdentity(kbaData);
       
       if (response.verified && response.person) {
+        // Set auth token for subsequent API calls
+        // Backend expects: Bearer mock-token-{medicaid_id}
+        const token = `mock-token-${response.person.medicaid_id}`;
+        apiClient.setAuthToken(token);
+        
         // Log successful verification
         logKBASuccess(response.person, 2, 2);
         
