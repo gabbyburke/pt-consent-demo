@@ -243,6 +243,38 @@ class FirestoreService:
         
         return [doc.to_dict() for doc in docs]
     
+    # Medicaid Roster Operations (for KBA verification)
+    
+    def create_person(self, person_data: Dict[str, Any]) -> str:
+        """
+        Creates a new person in the medicaid_roster collection.
+        
+        Args:
+            person_data: Person data dictionary
+            
+        Returns:
+            Person document ID (medicaid_id)
+        """
+        medicaid_id = person_data['medicaid_id']
+        doc_ref = self.db.collection('medicaid_roster').document(medicaid_id)
+        doc_ref.set(person_data)
+        logger.info(f"Created person in medicaid_roster: {medicaid_id}")
+        return medicaid_id
+    
+    def get_person_by_medicaid_id(self, medicaid_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves a person by Medicaid ID from the medicaid_roster collection.
+        
+        Args:
+            medicaid_id: Medicaid ID
+            
+        Returns:
+            Person data or None if not found
+        """
+        doc_ref = self.db.collection('medicaid_roster').document(medicaid_id)
+        doc = doc_ref.get()
+        return doc.to_dict() if doc.exists else None
+    
     # Verification Token Operations
     
     def create_verification_token(self, token_data: Dict[str, Any]) -> str:
