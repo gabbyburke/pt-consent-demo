@@ -35,8 +35,7 @@ class KBAService:
             Person data if found, None otherwise
         """
         try:
-            db = firestore_db.db
-            doc_ref = db.collection('synthetic_persons').document(medicaid_id)
+            doc_ref = firestore_db.db.collection('synthetic_persons').document(medicaid_id)
             doc = doc_ref.get()
             
             if doc.exists:
@@ -57,8 +56,7 @@ class KBAService:
             Dict with locked status and message
         """
         try:
-            db = firestore_db.db
-            doc_ref = db.collection('kba_attempts').document(medicaid_id)
+            doc_ref = firestore_db.db.collection('kba_attempts').document(medicaid_id)
             doc = doc_ref.get()
             
             if not doc.exists:
@@ -109,8 +107,7 @@ class KBAService:
             ip_address: User's IP address
         """
         try:
-            db = firestore_db.db
-            doc_ref = db.collection('kba_attempts').document(medicaid_id)
+            doc_ref = firestore_db.db.collection('kba_attempts').document(medicaid_id)
             doc = doc_ref.get()
             
             if success:
