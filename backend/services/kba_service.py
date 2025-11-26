@@ -230,7 +230,7 @@ class KBAService:
                 user_id=medicaid_id,
                 action=AuditAction.KBA_VERIFIED,
                 ip_address=ip_address,
-                details={
+                metadata={
                     'fields_checked': fields_checked,
                     'matches': matches
                 }
@@ -256,7 +256,7 @@ class KBAService:
                 user_id=medicaid_id,
                 action=AuditAction.KBA_FAILED,
                 ip_address=ip_address,
-                details={
+                metadata={
                     'fields_checked': fields_checked,
                     'matches': matches
                 }
