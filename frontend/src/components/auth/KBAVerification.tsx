@@ -78,14 +78,24 @@ export function KBAVerification({
     
     try {
       // Build the request with all provided fields
+      const medicaidId = selectedTestPerson?.medicaid_id;
+      
+      if (!medicaidId) {
+        onError('Please select a test person from the Demo Control Panel first');
+        setIsSubmitting(false);
+        return;
+      }
+      
       const kbaData: any = {
-        medicaid_id: selectedTestPerson?.medicaid_id || 'unknown'
+        medicaid_id: medicaidId
       };
       
       if (ssnLast4) kbaData.ssn_last4 = ssnLast4;
       if (dob) kbaData.dob = dob;
       if (zipCode) kbaData.zip_code = zipCode;
       if (street) kbaData.street = street;
+      
+      console.log('Sending KBA data:', kbaData);
       
       // Log KBA request with fields being checked
       const fieldsChecked = [];

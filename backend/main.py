@@ -167,9 +167,8 @@ app.register_blueprint(provider_bp)
 
 logger.info("All blueprints registered")
 
-# Initialize database on startup
-logger.info("Checking database initialization...")
-initialize_database()
+# Note: Database initialization should be done once manually using init_firestore.py
+# This avoids unnecessary checks on every startup
 
 
 @app.route('/api/health', methods=['GET'])
