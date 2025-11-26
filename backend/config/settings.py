@@ -61,8 +61,10 @@ class Config:
         if not cls.GCP_PROJECT_ID:
             raise ValueError("GCP_PROJECT_ID must be set")
         
-        if cls.FLASK_ENV == "production" and cls.SECRET_KEY == "dev-secret-key-change-in-production":
-            raise ValueError("SECRET_KEY must be changed in production")
+        # In production, SECRET_KEY must be set via Secret Manager
+        if cls.FLASK_ENV == "production":
+            if not cls.SECRET_KEY or cls.SECRET_KEY == "dev-secret-key-change-in-production":
+                raise ValueError("SECRET_KEY must be set via Secret Manager in production")
     
     @classmethod
     def get_config_summary(cls) -> dict:
