@@ -17,7 +17,7 @@ class KBAService {
     try {
       // Send the data as-is - the component already built it correctly
       const response = await apiClient.post<KBAVerificationResponse>(
-        '/kba-challenge',
+        '/kba/verify',
         kbaData
       );
 
