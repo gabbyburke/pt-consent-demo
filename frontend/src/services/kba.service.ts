@@ -9,18 +9,16 @@ class KBAService {
   /**
    * Submits KBA challenge data for verification.
    * 
-   * @param kbaData - KBA data containing SSN last 4 and DOB
+   * @param kbaData - KBA data containing any combination of fields (medicaid_id, ssn_last4, dob, zip_code, street)
    * @returns Promise resolving to verification response
    * @throws ApiError if verification fails
    */
-  async verifyIdentity(kbaData: KBAData): Promise<KBAVerificationResponse> {
+  async verifyIdentity(kbaData: any): Promise<KBAVerificationResponse> {
     try {
+      // Send the data as-is - the component already built it correctly
       const response = await apiClient.post<KBAVerificationResponse>(
         '/kba-challenge',
-        {
-          ssn_last4: kbaData.ssnLast4,
-          dob: kbaData.dob,
-        }
+        kbaData
       );
 
       return response;
