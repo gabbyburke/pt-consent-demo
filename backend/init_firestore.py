@@ -12,15 +12,17 @@ import sys
 
 # Configuration
 PROJECT_ID = "gb-demos"
+DATABASE_ID = "consent-mgmt"  # Match the Cloud Run configuration
 
 def init_providers():
     """Initialize Firestore with sample healthcare providers."""
     print(f"🔧 Initializing Firestore in project: {PROJECT_ID}")
+    print(f"📊 Database: {DATABASE_ID}")
     print("=" * 60)
     
     try:
-        # Initialize Firestore client
-        db = firestore.Client(project=PROJECT_ID)
+        # Initialize Firestore client with specific database
+        db = firestore.Client(project=PROJECT_ID, database=DATABASE_ID)
         print("✅ Connected to Firestore")
         
         # Sample providers for Colorado
@@ -105,7 +107,7 @@ def init_providers():
 def verify_providers():
     """Verify that providers were created successfully."""
     try:
-        db = firestore.Client(project=PROJECT_ID)
+        db = firestore.Client(project=PROJECT_ID, database=DATABASE_ID)
         providers = list(db.collection('providers').stream())
         
         print(f"\n🔍 Verification: Found {len(providers)} providers in Firestore")
