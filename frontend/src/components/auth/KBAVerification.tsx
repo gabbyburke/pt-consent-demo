@@ -36,8 +36,12 @@ export function KBAVerification({
 }: KBAVerificationProps): React.ReactElement {
   const [ssnLast4, setSsnLast4] = useState('');
   const [dob, setDob] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [street, setStreet] = useState('');
   const [ssnError, setSsnError] = useState('');
   const [dobError, setDobError] = useState('');
+  const [zipError, setZipError] = useState('');
+  const [streetError, setStreetError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { logKBARequest, logKBASuccess, logKBAFailure, logAuthToken, logAuthSuccess } = useApiActivityLogger();
 
@@ -46,47 +50,14 @@ export function KBAVerification({
     if (selectedTestPerson) {
       setSsnLast4(selectedTestPerson.ssn_last_4 || '');
       setDob(selectedTestPerson.date_of_birth || '');
+      setZipCode(selectedTestPerson.address?.zip || '');
+      setStreet(selectedTestPerson.address?.street || '');
       setSsnError('');
       setDobError('');
+      setZipError('');
+      setStreetError('');
     }
   }, [selectedTestPerson]);
-
-  /**
-   * Validates SSN last 4 input.
-   */
-  const validateSSN = (value: string): boolean => {
-    if (!value) {
-      setSsnError('SSN last 4 digits are required');
-      return false;
-    }
-    
-    if (!/^\d{4}$/.test(value)) {
-      setSsnError('Must be exactly 4 digits');
-      return false;
-    }
-    
-    setSsnError('');
-    return true;
-  };
-
-  /**
-   * Validates date of birth input.
-   */
-  const validateDOB = (value: string): boolean => {
-    if (!value) {
-      setDobError('Date of birth is required');
-      return false;
-    }
-    
-    const validation = kbaService.validateKBAData({ ssnLast4: '0000', dob: value });
-    if (!validation.valid) {
-      setDobError(validation.error || 'Invalid date of birth');
-      return false;
-    }
-    
-    setDobError('');
-    return true;
-  };
 
   /**
    * Handles form submission.
@@ -94,23 +65,35 @@ export function KBAVerification({
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     
-    const ssnValid = validateSSN(ssnLast4);
-    const dobValid = validateDOB(dob);
+    // Count how many fields are provided
+    const fieldsProvided = [ssnLast4, dob, zipCode, street].filter(f => f.trim()).length;
     
-    if (!ssnValid || !dobValid) {
+    if (fieldsProvided < 2) {
+      onError('Please provide at least 2 fields for verification');
       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      const kbaData: KBAData = {
-        ssnLast4,
-        dob,
+      // Build the request with all provided fields
+      const kbaData: any = {
+        medicaid_id: selectedTestPerson?.medicaid_id || 'unknown'
       };
       
-      // Log KBA request
-      logKBARequest(selectedTestPerson?.medicaid_id || 'unknown', ['SSN', 'DOB']);
+      if (ssnLast4) kbaData.ssn_last4 = ssnLast4;
+      if (dob) kbaData.dob = dob;
+      if (zipCode) kbaData.zip_code = zipCode;
+      if (street) kbaData.street = street;
+      
+      // Log KBA request with fields being checked
+      const fieldsChecked = [];
+      if (ssnLast4) fieldsChecked.push('SSN');
+      if (dob) fieldsChecked.push('DOB');
+      if (zipCode) fieldsChecked.push('ZIP');
+      if (street) fieldsChecked.push('Street');
+      
+      logKBARequest(kbaData.medicaid_id, fieldsChecked);
       
       const response = await kbaService.verifyIdentity(kbaData);
       
@@ -162,6 +145,30 @@ export function KBAVerification({
     }
   };
 
+  /**
+   * Handles ZIP code input change.
+   */
+  const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 5);
+    setZipCode(value);
+    
+    if (zipError) {
+      setZipError('');
+    }
+  };
+
+  /**
+   * Handles street address input change.
+   */
+  const handleStreetChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const value = e.target.value;
+    setStreet(value);
+    
+    if (streetError) {
+      setStreetError('');
+    }
+  };
+
   const disabled = isLoading || isSubmitting;
 
   return (
@@ -190,13 +197,13 @@ export function KBAVerification({
           color="text.secondary" 
           sx={{ mb: 2 }}
         >
-          For your security, please provide the following information to verify your identity.
+          Please provide at least 2 of the following fields to verify your identity (2-of-4 verification).
         </Typography>
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <TextField 
             fullWidth 
-            label="Last 4 Digits of SSN" 
+            label="Last 4 Digits of SSN (Optional)" 
             variant="outlined" 
             margin="normal"
             type="text"
@@ -204,13 +211,11 @@ export function KBAVerification({
             value={ssnLast4} 
             onChange={handleSSNChange}
             error={!!ssnError}
-            helperText={ssnError || 'Enter the last 4 digits of your Social Security Number'}
+            helperText={ssnError || 'Last 4 digits of your Social Security Number'}
             disabled={disabled}
-            required
             autoComplete="off"
             inputProps={{
               'aria-label': 'Last 4 digits of Social Security Number',
-              'aria-required': 'true',
               'aria-invalid': !!ssnError,
               maxLength: 4,
               pattern: '[0-9]{4}',
@@ -219,7 +224,7 @@ export function KBAVerification({
           
           <TextField 
             fullWidth 
-            label="Date of Birth" 
+            label="Date of Birth (Optional)" 
             variant="outlined" 
             margin="normal"
             type="date"
@@ -228,14 +233,51 @@ export function KBAVerification({
             error={!!dobError}
             helperText={dobError || 'Format: YYYY-MM-DD'}
             disabled={disabled}
-            required
             InputLabelProps={{
               shrink: true,
             }}
             inputProps={{
               'aria-label': 'Date of birth',
-              'aria-required': 'true',
               'aria-invalid': !!dobError,
+            }}
+          />
+          
+          <TextField 
+            fullWidth 
+            label="ZIP Code (Optional)" 
+            variant="outlined" 
+            margin="normal"
+            type="text"
+            inputMode="numeric"
+            value={zipCode} 
+            onChange={handleZipChange}
+            error={!!zipError}
+            helperText={zipError || '5-digit ZIP code'}
+            disabled={disabled}
+            autoComplete="postal-code"
+            inputProps={{
+              'aria-label': 'ZIP code',
+              'aria-invalid': !!zipError,
+              maxLength: 5,
+              pattern: '[0-9]{5}',
+            }}
+          />
+          
+          <TextField 
+            fullWidth 
+            label="Street Address (Optional)" 
+            variant="outlined" 
+            margin="normal"
+            type="text"
+            value={street} 
+            onChange={handleStreetChange}
+            error={!!streetError}
+            helperText={streetError || 'Street address (e.g., 123 Main St)'}
+            disabled={disabled}
+            autoComplete="street-address"
+            inputProps={{
+              'aria-label': 'Street address',
+              'aria-invalid': !!streetError,
             }}
           />
           
