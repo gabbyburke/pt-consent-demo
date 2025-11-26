@@ -4,6 +4,7 @@ import { GlobalConsentToggle } from './GlobalConsentToggle';
 import { ProviderList } from './ProviderList';
 import { consentService } from '../../services/consent.service';
 import type { ProviderWithConsent } from '../../models/Provider';
+import { useApiActivityLogger } from '../../hooks/useApiActivityLogger';
 
 /**
  * Props for ConsentDashboard component.
@@ -30,6 +31,7 @@ export function ConsentDashboard({
   const [providers, setProviders] = useState<ProviderWithConsent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const { logConsentUpdate, logApiRequest, logApiResponse } = useApiActivityLogger();
 
   /**
    * Fetches consent data from the backend.
@@ -75,21 +77,52 @@ export function ConsentDashboard({
   const handleToggleConsent = async (providerId: string, currentStatus: boolean): Promise<void> => {
     setIsUpdating(true);
     
+    // Save original state for potential revert
+    const originalProviders = [...providers];
+    
+    // Find provider name for logging
+    const provider = providers.find(p => p.id === providerId);
+    const providerName = provider?.name || providerId;
+    const newStatus = !currentStatus;
+    
     // Optimistic update
     const updatedProviders = providers.map(p =>
-      p.id === providerId ? { ...p, consented: !currentStatus } : p
+      p.id === providerId ? { ...p, consented: newStatus } : p
     );
     setProviders(updatedProviders);
 
     try {
+      // Log the API request
+      logApiRequest('POST', '/api/consents/toggle', {
+        provider_id: providerId,
+        consented: newStatus,
+      });
+      
+      const startTime = Date.now();
       await consentService.toggleConsent(providerId, currentStatus);
-      onSuccess?.(`Consent ${!currentStatus ? 'granted' : 'revoked'} successfully`);
+      const duration = Date.now() - startTime;
+      
+      // Log successful API response
+      logApiResponse('POST', '/api/consents/toggle', 200, { success: true }, duration);
+      
+      // Log the consent update to timeline
+      logConsentUpdate(
+        providerName,
+        newStatus ? 'GRANTED' : 'REVOKED',
+        false
+      );
+      
+      onSuccess?.(`Consent ${newStatus ? 'granted' : 'revoked'} successfully`);
     } catch (error) {
       console.error('Failed to update consent:', error);
+      
+      // Log failed API response
+      logApiResponse('POST', '/api/consents/toggle', 500, { error: 'Failed to update consent' });
+      
       onError('Failed to update consent. Please try again.');
       
-      // Revert on error
-      setProviders(providers);
+      // Revert to original state on error
+      setProviders(originalProviders);
     } finally {
       setIsUpdating(false);
     }
@@ -101,24 +134,50 @@ export function ConsentDashboard({
   const handleToggleAll = async (checked: boolean): Promise<void> => {
     setIsUpdating(true);
     
+    // Save original state for potential revert
+    const originalProviders = [...providers];
+    
     // Optimistic update
     const updatedProviders = providers.map(p => ({ ...p, consented: checked }));
     setProviders(updatedProviders);
 
     try {
       const providerIds = providers.map(p => p.id);
+      const endpoint = checked ? '/api/consents/grant-all' : '/api/consents/revoke-all';
+      
+      // Log the API request
+      logApiRequest('POST', endpoint, { provider_ids: providerIds });
+      
+      const startTime = Date.now();
       if (checked) {
         await consentService.grantAllConsents(providerIds);
       } else {
         await consentService.revokeAllConsents(providerIds);
       }
+      const duration = Date.now() - startTime;
+      
+      // Log successful API response
+      logApiResponse('POST', endpoint, 200, { success: true, count: providerIds.length }, duration);
+      
+      // Log the global consent update to timeline
+      logConsentUpdate(
+        `All Providers (${providers.length})`,
+        checked ? 'GRANTED' : 'REVOKED',
+        true
+      );
+      
       onSuccess?.(`Consent ${checked ? 'granted' : 'revoked'} for all providers`);
     } catch (error) {
       console.error('Failed to update all consents:', error);
+      
+      // Log failed API response
+      const endpoint = checked ? '/api/consents/grant-all' : '/api/consents/revoke-all';
+      logApiResponse('POST', endpoint, 500, { error: 'Failed to update consents' });
+      
       onError('Failed to update consents. Please try again.');
       
-      // Revert on error
-      setProviders(providers);
+      // Revert to original state on error
+      setProviders(originalProviders);
     } finally {
       setIsUpdating(false);
     }

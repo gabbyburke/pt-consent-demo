@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, TextField, Button, Box } from '@mui/material';
+import { signInWithCustomToken } from 'firebase/auth';
 import { kbaService } from '../../services/kba.service';
 import { apiClient } from '../../services/api.client';
-import type { KBAData } from '../../models/User';
 import { useApiActivityLogger } from '../../hooks/useApiActivityLogger';
+import { auth } from '../../config/firebase.config';
 
 /**
  * Props for KBAVerification component.
@@ -109,19 +110,42 @@ export function KBAVerification({
       const response = await kbaService.verifyIdentity(kbaData);
       
       if (response.verified && response.person) {
-        // Set auth token for subsequent API calls
-        // Backend expects: Bearer mock-token-{medicaid_id}
-        const token = `mock-token-${response.person.medicaid_id}`;
-        apiClient.setAuthToken(token);
-        
         // Log successful verification
         logKBASuccess(response.person, 2, 2);
         
-        // Simulate GCIP token generation
-        logAuthToken(response.person.medicaid_id);
-        
-        // Log authentication success
-        logAuthSuccess(response.person);
+        // Check if we got a custom token from the backend
+        if (response.custom_token) {
+          try {
+            // Sign in with the custom token from Firebase
+            logAuthToken(response.person.medicaid_id);
+            
+            const userCredential = await signInWithCustomToken(auth, response.custom_token);
+            
+            // Get the ID token for API calls
+            const idToken = await userCredential.user.getIdToken();
+            apiClient.setAuthToken(idToken);
+            
+            // Log authentication success
+            logAuthSuccess(response.person);
+            
+            console.log('Signed in with Firebase custom token');
+          } catch (firebaseError) {
+            console.error('Firebase sign-in failed, falling back to mock token:', firebaseError);
+            
+            // Fallback to mock token if Firebase fails
+            const token = `mock-token-${response.person.medicaid_id}`;
+            apiClient.setAuthToken(token);
+            logAuthToken(response.person.medicaid_id);
+            logAuthSuccess(response.person);
+          }
+        } else {
+          // Fallback to mock token if no custom token provided
+          console.log('No custom token provided, using mock token');
+          const token = `mock-token-${response.person.medicaid_id}`;
+          apiClient.setAuthToken(token);
+          logAuthToken(response.person.medicaid_id);
+          logAuthSuccess(response.person);
+        }
         
         onVerified();
       } else {

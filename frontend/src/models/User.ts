@@ -48,6 +48,9 @@ export interface KBAVerificationResponse {
     phone?: string;
   };
   
+  /** Firebase custom token for authentication (if GCIP is enabled) */
+  custom_token?: string;
+  
   /** Remaining attempts if verification failed */
   attempts_remaining?: number;
 }

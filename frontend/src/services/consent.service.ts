@@ -81,30 +81,52 @@ class ConsentService {
     providerId: string,
     currentStatus: boolean
   ): Promise<ConsentResponse> {
-    return this.updateConsent({
-      providerId,
-      consented: !currentStatus,
-    });
+    try {
+      const response = await apiClient.post<ConsentResponse>('/consents/toggle', {
+        provider_id: providerId,
+        consented: !currentStatus,
+      });
+      return response;
+    } catch (error) {
+      console.error('Failed to toggle consent:', error);
+      throw error;
+    }
   }
 
   /**
    * Revokes all consents for the current user.
    * 
    * @param providerIds - Array of all provider IDs
-   * @returns Promise resolving to array of consent responses
+   * @returns Promise resolving to the response
    */
-  async revokeAllConsents(providerIds: string[]): Promise<ConsentResponse[]> {
-    return this.updateMultipleConsents(providerIds, false);
+  async revokeAllConsents(providerIds: string[]): Promise<ConsentResponse> {
+    try {
+      const response = await apiClient.post<ConsentResponse>('/consents/revoke-all', {
+        provider_ids: providerIds,
+      });
+      return response;
+    } catch (error) {
+      console.error('Failed to revoke all consents:', error);
+      throw error;
+    }
   }
 
   /**
    * Grants consent to all providers for the current user.
    * 
    * @param providerIds - Array of all provider IDs
-   * @returns Promise resolving to array of consent responses
+   * @returns Promise resolving to the response
    */
-  async grantAllConsents(providerIds: string[]): Promise<ConsentResponse[]> {
-    return this.updateMultipleConsents(providerIds, true);
+  async grantAllConsents(providerIds: string[]): Promise<ConsentResponse> {
+    try {
+      const response = await apiClient.post<ConsentResponse>('/consents/grant-all', {
+        provider_ids: providerIds,
+      });
+      return response;
+    } catch (error) {
+      console.error('Failed to grant all consents:', error);
+      throw error;
+    }
   }
 }
 

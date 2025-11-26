@@ -2,6 +2,7 @@
 Firestore database service for managing all database operations.
 """
 from google.cloud import firestore
+from google.cloud.firestore import SERVER_TIMESTAMP
 from typing import Optional, List, Dict, Any
 import logging
 from datetime import datetime
@@ -68,7 +69,7 @@ class FirestoreService:
             uid: User ID
             updates: Fields to update
         """
-        updates['updated_at'] = datetime.utcnow()
+        updates['updated_at'] = SERVER_TIMESTAMP
         self.db.collection('users').document(uid).update(updates)
         logger.info(f"Updated user: {uid}")
     
@@ -135,6 +136,13 @@ class FirestoreService:
         """
         doc_ref = self.db.collection('consents').document()
         consent_data['id'] = doc_ref.id
+        
+        # Convert datetime objects to Firestore timestamps
+        if 'created_at' in consent_data and isinstance(consent_data['created_at'], datetime):
+            consent_data['created_at'] = consent_data['created_at']
+        if 'updated_at' in consent_data and isinstance(consent_data['updated_at'], datetime):
+            consent_data['updated_at'] = consent_data['updated_at']
+        
         doc_ref.set(consent_data)
         logger.info(f"Created consent: {doc_ref.id}")
         return doc_ref.id
@@ -199,7 +207,7 @@ class FirestoreService:
             consent_id: Consent ID
             updates: Fields to update
         """
-        updates['updated_at'] = datetime.utcnow()
+        updates['updated_at'] = SERVER_TIMESTAMP
         self.db.collection('consents').document(consent_id).update(updates)
         logger.info(f"Updated consent: {consent_id}")
     
@@ -217,6 +225,11 @@ class FirestoreService:
         """
         doc_ref = self.db.collection('audit_logs').document()
         log_data['id'] = doc_ref.id
+        
+        # Convert datetime to Firestore timestamp
+        if 'timestamp' in log_data and isinstance(log_data['timestamp'], datetime):
+            log_data['timestamp'] = log_data['timestamp']
+        
         doc_ref.set(log_data)
         return doc_ref.id
     

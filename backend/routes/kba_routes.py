@@ -4,6 +4,7 @@ Implements 2-of-4 verification using Medicaid roster data.
 """
 from flask import Blueprint, request, jsonify
 import logging
+from firebase_admin import auth as firebase_auth
 
 from services import kba_service
 
@@ -66,6 +67,20 @@ def verify_identity():
         )
         
         if result['verified']:
+            # Generate Firebase custom token for the verified user
+            try:
+                # Use medicaid_id as the Firebase UID
+                custom_token = firebase_auth.create_custom_token(medicaid_id)
+                
+                # Add the custom token to the response
+                result['custom_token'] = custom_token.decode('utf-8')
+                
+                logger.info(f"Generated custom token for user: {medicaid_id}")
+            except Exception as e:
+                logger.error(f"Failed to generate custom token: {e}")
+                # Continue without token - frontend will fall back to mock token
+                result['custom_token'] = None
+            
             return jsonify(result), 200
         else:
             # Check if locked out

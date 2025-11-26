@@ -7,6 +7,8 @@ import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
+import firebase_admin
+from firebase_admin import credentials
 
 from config import Config
 from routes import auth_bp, kba_bp, consent_bp, provider_bp
@@ -21,6 +23,18 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Initialize Firebase Admin SDK
+# When running on Cloud Run, Application Default Credentials are used automatically
+# For local development, set GOOGLE_APPLICATION_CREDENTIALS environment variable
+try:
+    if not firebase_admin._apps:
+        # Initialize with default credentials (works on Cloud Run and with ADC locally)
+        firebase_admin.initialize_app()
+        logger.info("Firebase Admin SDK initialized successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize Firebase Admin SDK: {e}")
+    logger.warning("Continuing without Firebase Admin - custom token generation will not work")
 
 
 def initialize_database():
